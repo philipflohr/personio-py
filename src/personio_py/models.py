@@ -67,7 +67,7 @@ class PersonioResource:
 
     def __init__(self, client: 'Personio' = None, **kwargs):
         super().__init__()
-        self.client = client
+        self._client = client
 
     @classmethod
     def _field_mapping(cls) -> Dict[str, FieldMapping]:
@@ -282,7 +282,7 @@ class WritablePersonioResource(PersonioResource):
         UnsupportedMethodError('delete', self.__class__)
 
     def _check_client(self, client: 'Personio' = None) -> 'Personio':
-        client = client or self.client
+        client = client or self._client
         if not client:
             raise PersonioError()
         if not client.authenticated:
@@ -601,10 +601,10 @@ class Absence(WritablePersonioResource):
         self.created_at = created_at
 
     def _create(self, client: 'Personio' = None):
-        get_client(self, client).create_absence(self)
+        return get_client(self, client).create_absence(self)
 
     def _delete(self, client: 'Personio' = None, allow_remote_query: bool = False):
-        get_client(self, client).delete_absence(self, remote_query_id=allow_remote_query)
+        return get_client(self, client).delete_absence(self, remote_query_id=allow_remote_query)
 
     def to_body_params(self):
         data = {
@@ -617,6 +617,7 @@ class Absence(WritablePersonioResource):
         }
         if self.comment is not None:
             data['comment'] = self.comment
+        print(data)
         return data
 
 
@@ -669,49 +670,13 @@ class Attendance(WritablePersonioResource):
         return d
 
     def _create(self, client: 'Personio'):
-        get_client(self, client).create_attendances([self])
+        pass
 
-    def _update(self, client: 'Personio', allow_remote_query: bool = False):
-        get_client(self, client).update_attendance(self, remote_query_id=allow_remote_query)
+    def _update(self, client: 'Personio'):
+        pass
 
-    def _delete(self, client: 'Personio', allow_remote_query: bool = False):
-        get_client(self, client).delete_attendance(self, remote_query_id=allow_remote_query)
-
-    def to_body_params(self, patch_existing_attendance=False):
-        """
-        Return the Attendance object in the representation expected by the Personio API
-
-        For an attendance record to be created all_values_required needs to be True.
-        For patch operations only the attendance id is required, but it is not
-        included into the body params.
-
-        :param patch_existing_attendance Get patch body. If False a create body is returned.
-        """
-        if patch_existing_attendance:
-            if self.id_ is None:
-                raise ValueError("An attendance id is required")
-            body_dict = {}
-            if self.date is not None:
-                body_dict['date'] = self.date.strftime("%Y-%m-%d")
-            if self.start_time is not None:
-                body_dict['start_time'] = self.start_time
-            if self.end_time is not None:
-                body_dict['end_time'] = self.end_time
-            if self.break_duration is not None:
-                body_dict['break'] = self.break_duration
-            if self.comment is not None:
-                body_dict['comment'] = self.comment
-            return body_dict
-        else:
-            return \
-                {
-                    "employee": self.employee_id,
-                    "date": self.date.strftime("%Y-%m-%d"),
-                    "start_time": self.start_time,
-                    "end_time": self.end_time,
-                    "break": self.break_duration,
-                    "comment": self.comment
-                }
+    def _delete(self, client: 'Personio'):
+        pass
 
 
 class Employee(WritablePersonioResource, LabeledAttributesMixin):
@@ -854,7 +819,7 @@ def log_once(level: int, message: str):
 
 
 def get_client(resource: PersonioResource, client: 'Personio' = None):
-    if resource.client or client:
-        return resource.client or client
+    if resource._client or client:
+        return resource._client or client
     raise PersonioError(f"no Personio client reference is available, please provide it to "
                         f"your {type(resource).__name__} or as function parameter")

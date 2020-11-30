@@ -1,7 +1,7 @@
 from .apitest_shared import *
 from datetime import timedelta, date
 
-from personio_py import Department, Employee, ShortEmployee, Personio, PersonioError, Absence, AbsenceType
+from personio_py import Employee, ShortEmployee, Personio, PersonioError, Absence, AbsenceType
 
 
 @skip_if_no_auth
@@ -96,12 +96,12 @@ def test_delete_absences_from_model_with_client():
     test_user = personio.get_employee(test_data['id'])
     delete_all_absences_of_employee(test_user)
     absence = create_absence_for_user(test_user, create=True)
-    absence.client = personio
+    absence._client = personio
     assert absence.delete() is True
 
 
 @skip_if_no_auth
-def test_delete_absences_from_client_id():
+def test_delete_absence_from_absence_id():
     test_data = shared_test_data['test_employee']
     test_user = personio.get_employee(test_data['id'])
     delete_all_absences_of_employee(test_user)

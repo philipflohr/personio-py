@@ -255,7 +255,7 @@ class Personio:
             'employee[position]': employee.position,
             'employee[department]': employee.department.name,
             'employee[hire_date]': employee.hire_date.isoformat()[:10],
-            'employee[weekly_hours]': employee.weekly_working_hours
+            'employee[weekly_hours]': employee.weekly_working_hours,
         }
         response = self.request_json('company/employees', method='POST', data=data)
         employee.id_ = response['data']['id']
@@ -268,7 +268,8 @@ class Personio:
         """
         placeholder; not ready to be used
         """
-        raise NotImplementedError()
+        # TODO implement
+        pass
 
     def get_attendances(self, employees: Union[int, List[int], Employee, List[Employee]],
                         start_date: datetime = None, end_date: datetime = None) -> List[Attendance]:
@@ -289,116 +290,28 @@ class Personio:
         return self._get_employee_metadata(
             'company/attendances', Attendance, employees, start_date, end_date)
 
-    def create_attendances(self, attendances: List[Attendance]) -> bool:
+    def create_attendances(self, attendances: List[Attendance]):
         """
-        Create all given attendance records.
-
-        Note: Attendances are created sequentially. This function stops on first error.
-        All attendance records before the error will be created, all records after the error will be skipped.
-
-        :param attendances: A list attendance records to be created.
+        placeholder; not ready to be used
         """
-        data_to_send = [attendance.to_body_params(patch_existing_attendance=False) for attendance in attendances]
-        response = self.request_json(path='company/attendances', method='POST', data={"attendances": data_to_send})
-        if response['success']:
-            for i in range(len(attendances)):
-                attendances[i].id_ = response['data']['id'][i]
-                attendances[i].client = self
-            return True
-        return False
+        # attendances can be created individually, but here you can push a huge bunch of items
+        # in a single request, which can be significantly faster
+        # TODO implement
+        pass
 
-    def update_attendance(self, attendance: Attendance, remote_query_id=False):
+    def update_attendance(self, attendance_id: int):
         """
-        Update an existing attendance record
-
-        Either an attendance id or o remote query is required. Remote queries are only executed if required.
-        An Attendance object returned by get_attendances() include the attendance id. DO NOT SET THE ID YOURSELF.
-
-        :param attendance: The Attendance object holding the new data.
-        :param remote_query_id: Allow a remote query for the id if it is not set within the given Attendance object.
-        :raises:
-            ValueError: If a query is required but not allowed or the query does not provide exactly one result.
+        placeholder; not ready to be used
         """
-        if attendance.id_ is not None:
-            # remote query not necessary
-            response = self.request_json(path='company/attendances/' + str(attendance.id_), method='PATCH',
-                                         data=attendance.to_body_params(patch_existing_attendance=True))
-            return response
-        else:
-            if remote_query_id:
-                attendance = self.__add_remote_attendance_id(attendance)
-                self.update_attendance(attendance)
-            else:
-                raise ValueError("You either need to provide the attendance id or allow a remote query.")
+        # TODO implement
+        pass
 
-    def delete_attendance(self, attendance: Attendance or int, remote_query_id=False):
+    def delete_attendance(self, attendance_id: int):
         """
-        Delete an existing record
-
-        Either an attendance id or o remote query is required. Remote queries are only executed if required.
-        An Attendance object returned by get_attendances() include the attendance id. DO NOT SET THE ID YOURSELF.
-
-        :param attendance: The Attendance object holding the new data or an attendance record id to delete.
-        :param remote_query_id: Allow a remote query for the id if it is not set within the given Attendance object.
-        :raises:
-            ValueError: If a query is required but not allowed or the query does not provide exactly one result.
+        placeholder; not ready to be used
         """
-        if isinstance(attendance, int):
-            response = self.request_json(path='company/attendances/' + str(attendance), method='DELETE')
-            return response
-        elif isinstance(attendance, Attendance):
-            if attendance.id_ is not None:
-                return self.delete_attendance(attendance.id_)
-            else:
-                if remote_query_id:
-                    attendance = self.__add_remote_attendance_id(attendance)
-                    self.delete_attendance(attendance.id_)
-                else:
-                    raise ValueError("You either need to provide the attendance id or allow a remote query.")
-        else:
-            raise ValueError("attendance must be an Attendance object or an integer")
-
-    def __add_remote_attendance_id(self, attendance: Attendance) -> Attendance:
-        """
-        Queries the API for an attendance record matching the given Attendance object and adds the remote id.
-
-        :param attendance: The attendance object to be updated
-        :return: The attendance object with the attendance_id set
-        """
-        if attendance.employee_id is None:
-            raise ValueError("For a remote query an employee_id is required")
-        if attendance.date is None:
-            raise ValueError("For a remote query a date is required")
-        matching_remote_attendances = self.get_attendances(employees=[attendance.employee_id],
-                                                           start_date=attendance.date, end_date=attendance.date)
-        if len(matching_remote_attendances) == 0:
-            raise ValueError("The attendance to patch was not found")
-        elif len(matching_remote_attendances) > 1:
-            raise ValueError("More than one attendance found.")
-        attendance.id_ = matching_remote_attendances[0].id_
-        return attendance
-
-    def __add_remote_absence_id(self, absence: Absence) -> Absence:
-        """
-        Queries the API for an absence record matching the given Absence object and adds the remote id.
-
-        :param absence: The absence object to be updated
-        :return: The absence object with the absence_id set
-        """
-        if absence.employee is None:
-            raise ValueError("For a remote query an employee_id is required")
-        if absence.start_date is None:
-            raise ValueError("For a remote query a start date is required")
-        if absence.end_date is None:
-            raise ValueError("For a remote query an end date is required")
-        matching_remote_absences = self.get_absences(employees=[absence.employee.id_],
-                                                     start_date=absence.start_date, end_date=absence.end_date)
-        if len(matching_remote_absences) == 0:
-            raise ValueError("The absence to patch was not found")
-        elif len(matching_remote_absences) > 1:
-            raise ValueError("More than one absence found.")
-        absence.id_ = matching_remote_absences[0].id_
-        return absence
+        # TODO implement
+        pass
 
     def get_absence_types(self) -> List[AbsenceType]:
         """
@@ -437,6 +350,7 @@ class Personio:
         Get an absence record from a given id.
 
         :param absence: The absence id to fetch.
+        :param remote_query_id: Whether it is allowed to make a remote ID query.
         """
         if isinstance(absence, int):
             response = self.request_json('company/time-offs/' + str(absence))
@@ -538,3 +452,25 @@ class Personio:
             employees = [employees]
         employee_ids = [(e.id_ if isinstance(e, Employee) else e) for e in employees]
         return employee_ids, start_date, end_date
+
+    def __add_remote_absence_id(self, absence: Absence) -> Absence:
+        """
+        Queries the API for an absence record matching the given Absence object and adds the remote id.
+
+        :param absence: The absence object to be updated
+        :return: The absence object with the absence_id set
+        """
+        if absence.employee is None:
+            raise ValueError("For a remote query an employee_id is required")
+        if absence.start_date is None:
+            raise ValueError("For a remote query a start date is required")
+        if absence.end_date is None:
+            raise ValueError("For a remote query an end date is required")
+        matching_remote_absences = self.get_absences(employees=[absence.employee.id_],
+                                                     start_date=absence.start_date, end_date=absence.end_date)
+        if len(matching_remote_absences) == 0:
+            raise ValueError("The absence to patch was not found")
+        elif len(matching_remote_absences) > 1:
+            raise ValueError("More than one absence found.")
+        absence.id_ = matching_remote_absences[0].id_
+        return absence
